@@ -1,0 +1,159 @@
+---
+import { getCollection, render } from 'astro:content';
+import { Image } from 'astro:assets';
+
+export async function getStaticPaths() {
+  const articleEntries = await getCollection('articles');
+
+  return articleEntries.map(entry => {
+    const cleanSlug = entry.id.replace(/\.[^/.]+$/, '').replace(/^[\/]/, '');
+    return {
+      params: { slug: cleanSlug },
+      props: { entry },
+    };
+  });
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{entry.data.title}</title>
+  <style>
+    :root {
+      --header-height: 60px;
+      --content-max-width: 720px;
+      --footer-min-height: 300px;
+      --body-min-height: 600px;
+      
+      --color-header-bg: #ffffff;
+      --color-body-bg: #e2e8f0;
+      --color-content-bg: #e2e8f0;
+      --color-footer-bg: #FFEF00;
+      --color-border: #cbd5e1;
+      --color-text: #1e293b;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: var(--color-text);
+      line-height: 1.6;
+      background-color: var(--color-body-bg);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      height: var(--header-height);
+      background-color: var(--color-header-bg);
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 1.5rem;
+    }
+
+    .main-container {
+      flex: 1 0 auto;
+      min-height: var(--body-min-height);
+      background-color: var(--color-body-bg);
+      display: flex;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    .content {
+      width: 100%;
+      max-width: var(--content-max-width);
+      background-color: var(--color-content-bg);
+      padding: 2rem;
+    }
+
+    .article-header {
+      margin-bottom: 2rem;
+    }
+
+    .article-meta {
+      color: #64748b;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+    }
+
+    .cover-image {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      margin: 1.5rem 0;
+    }
+
+    .markdown-body img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 6px;
+      margin: 1rem 0;
+    }
+
+    .footer {
+      flex-shrink: 0;
+      min-height: var(--footer-min-height);
+      background-color: var(--color-footer-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.5rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <nav style="width: 100%; max-width: var(--content-max-width); display: flex; justify-content: space-between; align-items: center;">
+      <a href="/" style="color: inherit; text-decoration: none; font-weight: bold;">← Back to Home</a>
+    </nav>
+  </header>
+
+  <main class="main-container">
+    <article class="content">
+      <header class="article-header">
+        <h1>{entry.data.title}</h1>
+        <div class="article-meta">
+          Published on {entry.data.pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} by {entry.data.author}
+        </div>
+        {entry.data.coverImage && (
+          <Image 
+            src={entry.data.coverImage} 
+            alt={entry.data.coverAlt || entry.data.title} 
+            class="cover-image" 
+          />
+        )}
+      </header>
+      
+      <div class="markdown-body">
+        <Content />
+      </div>
+    </article>
+  </main>
+
+  <footer class="footer">
+    <div style="width: 100%; max-width: var(--content-max-width); text-align: center;">
+      <p><strong>Static Blog Generator</strong></p>
+    </div>
+  </footer>
+
+</body>
+</html>
